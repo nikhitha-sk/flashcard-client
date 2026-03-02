@@ -1,34 +1,82 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import './CreateFlashcard.css'; // Import CreateFlashcard.css from client/src
 
 function CreateFlashcard() {
   const { deckId } = useParams();
   const navigate = useNavigate();
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!front.trim() || !back.trim()) return;
+    setLoading(true);
     try {
       await axios.post('http://localhost:5000/api/flashcards', { front, back, deckId }, { withCredentials: true });
       navigate(`/decks/${deckId}/flashcards`);
     } catch (error) {
       alert('Error creating flashcard');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="create-flashcard-container">
-      <h2>Create Flashcard</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Front:</label>
-        <textarea value={front} onChange={(e) => setFront(e.target.value)} />
-        <label>Back:</label>
-        <textarea value={back} onChange={(e) => setBack(e.target.value)} />
-        <button type="submit">Create</button>
-      </form>
+    <div className="max-w-md mx-auto py-8">
+      <Link to={`/decks/${deckId}/flashcards`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground no-underline hover:text-foreground transition-colors mb-6">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Back to flashcards
+      </Link>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Add a flashcard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Write a question on the front and the answer on the back</p>
+      </div>
+      <div className="bg-card border border-border rounded-xl p-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="front" className="text-sm font-medium text-foreground">Front (Question)</label>
+            <textarea
+              id="front"
+              placeholder="What is the question?"
+              value={front}
+              onChange={(e) => setFront(e.target.value)}
+              required
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-vertical leading-relaxed"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="back" className="text-sm font-medium text-foreground">Back (Answer)</label>
+            <textarea
+              id="back"
+              placeholder="What is the answer?"
+              value={back}
+              onChange={(e) => setBack(e.target.value)}
+              required
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-vertical leading-relaxed"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={loading || !front.trim() || !back.trim()}
+              className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
+            >
+              {loading ? 'Creating...' : 'Create flashcard'}
+            </button>
+            <Link
+              to={`/decks/${deckId}/flashcards`}
+              className="px-4 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm no-underline hover:bg-border transition-colors text-center"
+            >
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
